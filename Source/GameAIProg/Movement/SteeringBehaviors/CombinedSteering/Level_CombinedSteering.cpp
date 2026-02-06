@@ -27,8 +27,6 @@ void ALevel_CombinedSteering::BeginDestroy()
 void ALevel_CombinedSteering::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	// TODO implement handling mouse click input 
 	
 #pragma region UI
 	//UI

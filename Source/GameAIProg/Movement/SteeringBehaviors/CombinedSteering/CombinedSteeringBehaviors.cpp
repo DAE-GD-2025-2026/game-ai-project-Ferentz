@@ -13,6 +13,7 @@ SteeringOutput BlendedSteering::CalculateSteering(float DeltaT, ASteeringAgent& 
 {
 	SteeringOutput BlendedSteering = {};
 	//TODO: Calculate the weighted average steeringbehavior
+
 	if (Agent.GetDebugRenderingEnabled())
 		DrawDebugDirectionalArrow(
 			Agent.GetWorld(),

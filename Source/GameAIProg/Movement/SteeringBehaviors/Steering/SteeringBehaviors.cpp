@@ -3,3 +3,4 @@
 
 //SEEK
 //*******
+// TODO: Do the Week01 assignment :^)

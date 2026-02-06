@@ -37,7 +37,7 @@ protected:
 	ImVec2 WindowPos{};
 
 	// Mouse target render toggle
-	bool VisualizeMouseTarget{true}; // TODO unused so far
+	bool VisualizeMouseTarget{true}; // unused so far
 
 	UPROPERTY(EditAnywhere)
 	AWorldTrimVolume* TrimWorld{nullptr};
