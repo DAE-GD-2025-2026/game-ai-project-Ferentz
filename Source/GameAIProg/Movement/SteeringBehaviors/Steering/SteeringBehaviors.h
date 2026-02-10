@@ -26,3 +26,57 @@ protected:
 };
 
 // Your own SteeringBehaviors should follow here...
+
+class Seek :public ISteeringBehavior
+{
+public:
+	Seek() = default;
+	virtual ~Seek() = default;
+
+	virtual SteeringOutput CalculateSteering(float DeltaTime, ASteeringAgent& Agent) override;
+};
+
+class Flee :public ISteeringBehavior
+{
+public:
+	Flee() = default;
+	virtual ~Flee() = default;
+
+	virtual SteeringOutput CalculateSteering(float DeltaTime, ASteeringAgent& Agent) override;
+};
+
+
+class Arrive :public ISteeringBehavior
+{
+public:
+	Arrive()
+		:SpeedMapper{ 1/(SlowRadius - TargetRadius) }
+	{}
+	virtual ~Arrive()
+	{
+		LastAgent->SetMaxLinearSpeed(OGSpeed);
+	}
+
+	virtual SteeringOutput CalculateSteering(float DeltaTime, ASteeringAgent& Agent) override;
+
+	float GetSlowRadius() const { return SlowRadius; }
+	float GetTargetRadius() const { return TargetRadius; }
+	float GetSpeedMapper() const { return SpeedMapper; }
+	void SetLastAgent(ASteeringAgent& Agent) { LastAgent = &Agent; }
+
+private:
+	ASteeringAgent* LastAgent;
+	float OGSpeed{};
+	float SlowRadius{500.f};
+	float TargetRadius{150.f};
+	float SpeedMapper;
+};
+
+class Face :public ISteeringBehavior
+{
+public:
+	Face() = default;
+	virtual ~Face() = default;
+
+	virtual SteeringOutput CalculateSteering(float DeltaTime, ASteeringAgent& Agent) override;
+};
