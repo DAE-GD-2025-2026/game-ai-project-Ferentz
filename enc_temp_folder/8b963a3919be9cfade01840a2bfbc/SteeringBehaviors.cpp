@@ -108,20 +108,3 @@ SteeringOutput Evade::CalculateSteering(float DeltaTime, ASteeringAgent& Agent)
 	Steering.LinearVelocity.Normalize();
 	return Steering;
 }
-SteeringOutput Wander::CalculateSteering(float DeltaTime, ASteeringAgent& Agent)
-{
-
-	SteeringOutput Steering{};
-	// we got the agent pos, we got the direction, we got the radius
-	FVector2D direction{ Agent.GetLinearVelocity() };
-	direction.Normalize();
-	FVector2D circleMid{ Agent.GetPosition() + direction * m_OffsetDistance };
-	float angle{ m_WanderAngle + FMath::RandRange(-m_MaxAngleChange, m_MaxAngleChange) };
-	m_WanderAngle = angle;
-	FVector2D circlePoint{ direction * sin(angle) + FVector2D(direction.Y, direction.X) * cos(angle) };
-
-	Steering.LinearVelocity = (circleMid + circlePoint) - Agent.GetPosition();
-
-	Steering.LinearVelocity.Normalize();
-	return Steering;
-}

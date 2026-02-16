@@ -103,21 +103,3 @@ public:
 
 private:
 };
-
-class Wander :public ISteeringBehavior
-{
-public:
-	Wander() = default;
-	virtual ~Wander() = default;
-
-	virtual SteeringOutput CalculateSteering(float DeltaTime, ASteeringAgent& Agent) override;
-
-	void SetWanderOffset(float offset) { m_OffsetDistance = offset; }
-	void SetWanderRadius(float offset) { m_Radius = offset; }
-	void SetMaxAngleChange(float offset) { m_MaxAngleChange = offset; }
-private:
-	float m_OffsetDistance = 6.f;
-	float m_Radius = 4.f;
-	float m_MaxAngleChange = FMath::DegreesToRadians(45);
-	float m_WanderAngle = 6.f;
-};

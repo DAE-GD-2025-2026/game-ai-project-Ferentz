@@ -35,6 +35,7 @@ private:
 		Seek,
 		Wander,
 		Flee,
+		Face,
 		Arrive,
 		Evade,
 		Pursuit,
