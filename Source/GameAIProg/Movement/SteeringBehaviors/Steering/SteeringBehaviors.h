@@ -116,8 +116,8 @@ public:
 	void SetWanderRadius(float offset) { m_Radius = offset; }
 	void SetMaxAngleChange(float offset) { m_MaxAngleChange = offset; }
 private:
-	float m_OffsetDistance = 6.f;
-	float m_Radius = 4.f;
+	float m_OffsetDistance = 60.f;
+	float m_Radius = 40.f;
 	float m_MaxAngleChange = FMath::DegreesToRadians(45);
 	float m_WanderAngle = 6.f;
 };
