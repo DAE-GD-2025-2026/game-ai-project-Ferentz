@@ -13,8 +13,23 @@ SteeringOutput BlendedSteering::CalculateSteering(float DeltaT, ASteeringAgent& 
 {
 	SteeringOutput BlendedSteering = {};
 	// TODO: Calculate the weighted average steeringbehavior
-	
-	// TODO: Add debug drawing
+	for (auto & behaviour : WeightedBehaviors)
+	{
+		// for eache behaviour, we need to get the output, combine them acording to their weight.
+		SteeringOutput tempSteering = behaviour.pBehavior->CalculateSteering(DeltaT, Agent);
+		if (!tempSteering.IsValid) continue;
+		tempSteering.AngularVelocity *= behaviour.Weight;
+		tempSteering.LinearVelocity *= behaviour.Weight;
+		BlendedSteering += tempSteering;
+
+	}
+
+	// TODO: Add debug 
+	const FVector start = FVector(Agent.GetPosition(), 0.f);
+	const FVector2D dir2D = BlendedSteering.LinearVelocity.GetSafeNormal();
+	const FVector end = start + FVector(dir2D, 0.f) * 200.f;
+
+	DrawDebugLine(Agent.GetWorld(), start, end, FColor::Magenta, false, 0.f, 0, 2.f);
 
 	return BlendedSteering;
 }
@@ -51,4 +66,12 @@ SteeringOutput PrioritySteering::CalculateSteering(float DeltaT, ASteeringAgent&
 
 	//If non of the behavior return a valid output, last behavior is returned
 	return Steering;
+}
+
+void PrioritySteering::SetTarget(const FTargetData& NewTarget)
+{
+	for (ISteeringBehavior* const pBehavior : m_PriorityBehaviors)
+	{
+		pBehavior->SetTarget(NewTarget);
+	}
 }

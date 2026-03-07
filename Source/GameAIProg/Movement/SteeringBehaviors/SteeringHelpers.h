@@ -92,7 +92,7 @@ struct SteeringOutput final
 		return *this;
 	}
 
-	SteeringOutput& operator+(const SteeringOutput& other)
+	SteeringOutput& operator+=(const SteeringOutput& other)
 	{
 		LinearVelocity += other.LinearVelocity;
 		AngularVelocity += other.AngularVelocity;
@@ -108,6 +108,25 @@ struct SteeringOutput final
 		return *this;
 	}
 
+	SteeringOutput& operator*(const SteeringOutput& other)
+	{
+		SteeringOutput out;
+		out.LinearVelocity = LinearVelocity * other.LinearVelocity;
+		out.AngularVelocity = AngularVelocity * other.AngularVelocity;
+
+		return out;
+	}
+
+	SteeringOutput& operator*(float f)
+	{
+		SteeringOutput out;
+		out.LinearVelocity = f * LinearVelocity;
+		out.AngularVelocity = f * AngularVelocity;
+
+		return out;
+	}
+	
+
 	SteeringOutput& operator*=(float f)
 	{
 		LinearVelocity = f * LinearVelocity;
@@ -115,6 +134,7 @@ struct SteeringOutput final
 
 		return *this;
 	}
+
 
 	SteeringOutput& operator/=(float f)
 	{
@@ -124,3 +144,6 @@ struct SteeringOutput final
 		return *this;
 	}
 };
+
+
+

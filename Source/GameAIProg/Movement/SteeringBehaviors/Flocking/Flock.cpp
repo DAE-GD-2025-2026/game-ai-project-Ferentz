@@ -10,24 +10,60 @@ Flock::Flock(
 	float WorldSize,
 	ASteeringAgent* const pAgentToEvade,
 	bool bTrimWorld)
-	: pWorld{pWorld}
+	: pWorld{ pWorld }
 	, FlockSize{ FlockSize }
-	, pAgentToEvade{pAgentToEvade}
+	, pAgentToEvade{ pAgentToEvade }
 {
+
+	pSeparationBehavior = std::make_unique<Separation>(this);
+	pCohesionBehavior = std::make_unique<Cohesion>(this);
+	pVelMatchBehavior = std::make_unique<VelocityMatch>(this);
+	pSeekBehavior = std::make_unique<Seek>();
+	pWanderBehavior = std::make_unique<Wander>();
+	//pEvadeBehavior.reset(std::make_unique<Evade>().get());
+
+	pBlendedSteering = std::make_unique<BlendedSteering>(
+		std::vector<BlendedSteering::WeightedBehavior>{
+			{ pSeparationBehavior.get(), 0.f },
+			{ pCohesionBehavior.get(),    0.f },
+			{ pVelMatchBehavior.get(),    0.f },
+			{ pWanderBehavior.get(),      1.f }
+				}
+			);
+
+	//pPrioritySteering = std::make_unique<PrioritySteering>(this);
+
+
 	//Agents.SetNum(FlockSize);
 	Agents.Reserve(FlockSize);
 	Neighbors.Reserve(NrOfNeighbors);
 
+	const float spawnArea{ 800 };
+
  // TODO: initialize the flock and the memory pool
+	int newFlockSize{ FlockSize };
 	for (int i{}; i < FlockSize; ++i)
 	{
+		int tries{};
 		ASteeringAgent* agent{};
-		agent = pWorld->SpawnActor<ASteeringAgent>(AgentClass, FVector{ 0,0,90 }, FRotator::ZeroRotator);
-		if (IsValid(agent))
+		while (!IsValid(agent) || tries > 10)
 		{
-			Agents.Add(std::move(agent));
+			tries++;
+			agent = pWorld->SpawnActor<ASteeringAgent>(AgentClass, FVector{ FMath::FRandRange(-spawnArea, spawnArea), FMath::FRandRange(-spawnArea, spawnArea),90 }, FRotator::ZeroRotator);
+			if (IsValid(agent))
+			{
+				agent->SetSteeringBehavior(pBlendedSteering.get());
+				Agents.Add(std::move(agent));
+			}
+			if (tries > 10)
+			{
+				newFlockSize--;
+			}
 		}
+		
+		
 	}
+	FlockSize = newFlockSize;
 }
 
 Flock::~Flock()
@@ -101,6 +137,42 @@ void Flock::ImGuiRender(ImVec2 const& WindowPos, ImVec2 const& WindowSize)
 
   // TODO: implement ImGUI sliders for steering behavior weights here
 		//End
+
+		if (pBlendedSteering)
+		{
+			// get pointers to weights
+			float* wSep = pBlendedSteering->GetWeight(pSeparationBehavior.get());
+			float* wCoh = pBlendedSteering->GetWeight(pCohesionBehavior.get());
+			float* wAli = pBlendedSteering->GetWeight(pVelMatchBehavior.get());
+			float* wWan = pBlendedSteering->GetWeight(pWanderBehavior.get());
+
+			// local copies
+			if (wSep)
+			{
+				float tmp = *wSep;
+				if (ImGui::SliderFloat("Separation", &tmp, 0.f, 3.f, "%.2f"))
+					*wSep = tmp;
+			}
+			if (wCoh)
+			{
+				float tmp = *wCoh;
+				if (ImGui::SliderFloat("Cohesion", &tmp, 0.f, 3.f, "%.2f"))
+					*wCoh = tmp;
+			}
+			if (wAli)
+			{
+				float tmp = *wAli;
+				if (ImGui::SliderFloat("Alignment", &tmp, 0.f, 3.f, "%.2f"))
+					*wAli = tmp;
+			}
+			if (wWan)
+			{
+				float tmp = *wWan;
+				if (ImGui::SliderFloat("Wander", &tmp, 0.f, 3.f, "%.2f"))
+					*wWan = tmp;
+			}
+		}
+
 		ImGui::End();
 	}
 #pragma endregion
@@ -110,6 +182,25 @@ void Flock::ImGuiRender(ImVec2 const& WindowPos, ImVec2 const& WindowSize)
 void Flock::RenderNeighborhood()
 {
  // TODO: Debugrender the neighbors for the first agent in the flock
+
+	ASteeringAgent* const first = Agents[0];
+	if (!IsValid(first)) return;
+	const float Z = first->GetActorLocation().Z; // keep it at agent height
+	const FVector center(first->GetPosition(), Z);
+	DrawDebugCircle(
+		pWorld,
+		center,
+		NeighborhoodRadius,
+		64,
+		FColor::Yellow,
+		false,
+		0.f,   // one frame
+		0,
+		2.f,
+		FVector(1, 0, 0),
+		FVector(0, 1, 0),
+		false
+	);
 }
 
 #ifndef GAMEAI_USE_SPACE_PARTITIONING
@@ -148,7 +239,7 @@ FVector2D Flock::GetAverageNeighborPos() const
 FVector2D Flock::GetAverageNeighborVelocity() const
 {
 	FVector2D avgVelocity = FVector2D::ZeroVector;
-
+	
 	for (ASteeringAgent* neighbor : Neighbors)
 	{
 		avgVelocity += neighbor->GetLinearVelocity();
@@ -161,6 +252,6 @@ FVector2D Flock::GetAverageNeighborVelocity() const
 
 void Flock::SetTarget_Seek(FSteeringParams const& Target)
 {
-
+	pSeekBehavior->SetTarget(Target);
 }
 

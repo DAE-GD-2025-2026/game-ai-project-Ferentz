@@ -15,7 +15,7 @@ public:
 	// Override to implement your own behavior
 	virtual SteeringOutput CalculateSteering(float DeltaT, ASteeringAgent & Agent) = 0;
 
-	void SetTarget(const FTargetData& NewTarget) { Target = NewTarget; }
+	virtual void SetTarget(const FTargetData& NewTarget) { Target = NewTarget; }
 	
 	template<class T, std::enable_if_t<std::is_base_of_v<ISteeringBehavior, T>>* = nullptr>
 	T* As()
@@ -118,6 +118,6 @@ public:
 private:
 	float m_OffsetDistance = 60.f;
 	float m_Radius = 40.f;
-	float m_MaxAngleChange = FMath::DegreesToRadians(45);
+	float m_MaxAngleChange =  FMath::DegreesToRadians(45);
 	float m_WanderAngle = 6.f;
 };
