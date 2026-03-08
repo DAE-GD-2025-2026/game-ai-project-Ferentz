@@ -112,15 +112,7 @@ SteeringOutput Evade::CalculateSteering(float DeltaTime, ASteeringAgent& Agent)
 
 	SteeringOutput Steering{};
 
-	DrawDebugSphere(
-		Agent.GetWorld(),
-		FVector((Target.Position), 0.f),
-		15.f,
-		12,
-		FColor::Blue,
-		false,
-		0.f
-	);
+	
 
 	if (FVector2D::Distance(Agent.GetPosition(), Target.Position) < 600.f)
 	{
@@ -140,30 +132,41 @@ SteeringOutput Evade::CalculateSteering(float DeltaTime, ASteeringAgent& Agent)
 
 	Steering.LinearVelocity = Agent.GetPosition() - (Target.Position + Target.LinearVelocity * time);
 
-	// Predicted position marker where the pursuer is expected to be
-	DrawDebugSphere(
-		Agent.GetWorld(),
-		FVector((Target.Position + Target.LinearVelocity * time), 0.f),
-		15.f,
-		12,
-		FColor::Yellow,
-		false,
-		0.f
-	);
+	if (Agent.GetDebugRenderingEnabled())
+	{
+		// Predicted position marker where the pursuer is expected to be
+		DrawDebugSphere(
+			Agent.GetWorld(),
+			FVector((Target.Position + Target.LinearVelocity * time), 0.f),
+			15.f,
+			12,
+			FColor::Yellow,
+			false,
+			0.f
+		);
 
-	// Line from agent to predicted position
-	DrawDebugLine(
-		Agent.GetWorld(),
-		FVector(Agent.GetPosition(), 0.f),
-		FVector((Target.Position + Target.LinearVelocity * time), 0.f),
-		FColor::Red,
-		false,
-		0.f,
-		0,
-		2.f
-	);
+		DrawDebugSphere(
+			Agent.GetWorld(),
+			FVector((Target.Position), 0.f),
+			15.f,
+			12,
+			FColor::Yellow,
+			false,
+			0.f
+		);
 
-	
+		// Line from agent to predicted position
+		DrawDebugLine(
+			Agent.GetWorld(),
+			FVector(Agent.GetPosition(), 0.f),
+			FVector((Target.Position + Target.LinearVelocity * time), 0.f),
+			FColor::Yellow,
+			false,
+			0.f,
+			0,
+			2.f
+		);
+	}
 	
 	Steering.LinearVelocity.Normalize();
 	return Steering;
@@ -195,7 +198,17 @@ SteeringOutput Wander::CalculateSteering(float DeltaTime, ASteeringAgent& Agent)
 	{
 		// need an fvector for circle mid
 		FVector mid{ circleMid.X, circleMid.Y, 0};
-		DrawDebugCircle(Agent.GetWorld(), mid, m_Radius, 50, FColor(0, 104, 167), false, -1, 0, 1, FVector{1,0,0}, FVector{ 0,1,0 }, true);
+		DrawDebugCircle(
+			Agent.GetWorld(),
+			mid,
+			m_Radius,
+			50,
+			FColor(0, 104, 167),
+			false,
+			-1, 0, 1,
+			FVector{1,0,0},
+			FVector{ 0,1,0 },
+			true);
 	}
 
 
