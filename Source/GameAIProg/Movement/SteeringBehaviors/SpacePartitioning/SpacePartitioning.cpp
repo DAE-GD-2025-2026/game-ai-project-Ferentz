@@ -36,8 +36,10 @@ CellSpace::CellSpace(UWorld* pWorld, float Width, float Height, int Rows, int Co
 	, NrOfCols{Cols}
 	, NrOfNeighbors{0}
 {
-	Neighbors.SetNum(MaxEntities);
 	
+	Neighbors.SetNum(MaxEntities);
+	Neighbors.Reset();
+	CellOrigin = FVector2D(-Width * 0.5f, -Height * 0.5f);
 	//calculate bounds of a cell
 	CellWidth = Width / Cols;
 	CellHeight = Height / Rows;
@@ -63,17 +65,20 @@ void CellSpace::AddAgent(ASteeringAgent& Agent)
 {
 	// TODO Add the agent to the correct cell
 	int const idx = PositionToIndex(FVector2D{ Agent.GetActorLocation().X,Agent.GetActorLocation().Y });
-
+	saveInt = idx;
 	if (std::find(
 		Cells[idx].Agents.begin(),
 		Cells[idx].Agents.end(),
-		&Agent)	 != Cells[idx].Agents.end()) return;
+		&Agent) != Cells[idx].Agents.end())
+	{
+		return;
+	}
 
 
 	Cells[idx].Agents.push_back(&Agent);
 }
 
-void CellSpace::UpdateAgentCell(ASteeringAgent& Agent, const FVector2D& OldPos)
+int CellSpace::UpdateAgentCell(ASteeringAgent& Agent, const FVector2D& OldPos)
 {
 	//TODO Check if the agent needs to be moved to another cell.
 	//TODO Use the calculated index for oldPos and currentPos for this
@@ -84,7 +89,7 @@ void CellSpace::UpdateAgentCell(ASteeringAgent& Agent, const FVector2D& OldPos)
 	int curIdx = PositionToIndex(currPos);
 
 
-	if (curIdx == oldIdx) return;
+	if (curIdx == oldIdx) return curIdx;
 
 	if (oldIdx >= 0 && oldIdx < static_cast<int>(Cells.size()))
 	{
@@ -100,13 +105,12 @@ void CellSpace::UpdateAgentCell(ASteeringAgent& Agent, const FVector2D& OldPos)
 			list.push_back(&Agent);
 		}
 	}
+	return curIdx;
 }
 
 void CellSpace::RegisterNeighbors(ASteeringAgent& Agent, float QueryRadius)
 {
-	// TODO Register the neighbors for the provided agent
-	// TODO Only check the cells that are within the radius of the neighborhood
-
+	
 	FVector2D pos{ Agent.GetActorLocation().X,Agent.GetActorLocation().Y };
 
 	FRect NHRect{
@@ -140,7 +144,7 @@ void CellSpace::RegisterNeighbors(ASteeringAgent& Agent, float QueryRadius)
 						continue;
 
 					const FVector2D neighPos{ potNeighbor->GetActorLocation().X, potNeighbor->GetActorLocation().Y };
-					float dist{ FVector2D::Distance(neighPos, pos) };
+					float dist{ static_cast<float>(FVector2D::Distance(neighPos, pos) )};
 
 					if (dist <= QueryRadius)
 					{
@@ -166,6 +170,20 @@ void CellSpace::RenderCells() const
 	// TODO Render the cells with the number of agents inside of it
 	for (Cell cell : Cells)
 	{
+		const FVector2D min = cell.BoundingBox.Min;
+		const FVector2D max = cell.BoundingBox.Max;
+		const FVector2D center2D = (min + max) * 0.5f;
+		const FVector center3D(center2D.X, center2D.Y, 90.f);
+		const int count = static_cast<int>(cell.Agents.size());
+		DrawDebugString(
+			pWorld,
+			center3D,
+			FString::Printf(TEXT("%d"), count),
+			nullptr,
+			FColor::White,
+			0.f,   // lifetime (0 = one frame)
+			false
+		);
 		DrawDebugBox(pWorld,
 			FVector{ cell.BoundingBox.Min.X,cell.BoundingBox.Min.Y, 0 },
 			FVector{ cell.BoundingBox.Max.X - cell.BoundingBox.Min.X,
@@ -175,17 +193,27 @@ void CellSpace::RenderCells() const
 	
 }
 
-int CellSpace::PositionToIndex(FVector2D const & Pos) const
+int CellSpace::PositionToIndex(FVector2D const & Pos)// const
 {
-	// TODO Calculate the index of the cell based on the position
-	float localX = Pos.X - CellOrigin.X;
-	float localY = Pos.Y - CellOrigin.Y;
+	float X = Pos.X - CellOrigin.X;
+	float Y = Pos.Y - CellOrigin.Y;
 
-	//variable = (condition) ? expressionTrue : expressionFalse;
-	int col = (localX >= SpaceWidth) ? NrOfCols - 1 : static_cast<int>(localX / CellWidth);
-	int row = (localY >= SpaceHeight) ? NrOfCols - 1 : static_cast<int>(localY / CellHeight);
+	X = FMath::Clamp(X, 0.f, SpaceWidth - KINDA_SMALL_NUMBER);
+	Y = FMath::Clamp(Y, 0.f, SpaceHeight - KINDA_SMALL_NUMBER);
+
+	const int col = FMath::Clamp(int(X / CellWidth), 0, NrOfCols - 1);
+	const int row = FMath::Clamp(int(Y / CellHeight), 0, NrOfRows - 1);
 
 	return row * NrOfCols + col;
+	//// TODO Calculate the index of the cell based on the position
+	//float localX = Pos.X - CellOrigin.X;
+	//float localY = Pos.Y - CellOrigin.Y;
+	//saveInt = 3;
+	////variable = (condition) ? expressionTrue : expressionFalse;
+	//int col = (localX >= SpaceWidth) ? NrOfCols - 1 : static_cast<int>(localX / CellWidth);
+	//int row = (localY >= SpaceHeight) ? NrOfRows - 1 : static_cast<int>(localY / CellHeight);
+
+	//return row * NrOfCols + col;
 }
 
 bool CellSpace::DoRectsOverlap(FRect const & RectA, FRect const & RectB)

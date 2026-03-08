@@ -35,7 +35,7 @@ public:
 	CellSpace(UWorld* pWorld, float Width, float Height, int Rows, int Cols, int MaxEntities);
 
 	void AddAgent(ASteeringAgent& Agent);
-	void UpdateAgentCell(ASteeringAgent& Agent, const FVector2D& OldPos);
+	int UpdateAgentCell(ASteeringAgent& Agent, const FVector2D& OldPos);
 
 	void RegisterNeighbors(ASteeringAgent& Agent, float QueryRadius);
 	const TArray<ASteeringAgent*>& GetNeighbors() const { return Neighbors; }
@@ -49,6 +49,8 @@ private:
 	// For debug draw purposes
 	UWorld* pWorld{};
 	
+
+	int saveInt{};
 	// Cells and properties
 	std::vector<Cell> Cells;
 	FVector2D CellOrigin{};
@@ -67,6 +69,6 @@ private:
 	int NrOfNeighbors;
 
 	// Helper functions
-	int PositionToIndex(FVector2D const & Pos) const;
+	int PositionToIndex(FVector2D const& Pos);// const;
 	bool DoRectsOverlap(FRect const& RectA, FRect const& RectB);
 };

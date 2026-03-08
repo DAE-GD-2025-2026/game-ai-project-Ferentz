@@ -37,6 +37,10 @@ Flock::Flock(
 	//Agents.SetNum(FlockSize);
 	Agents.Reserve(FlockSize);
 	Neighbors.Reserve(NrOfNeighbors);
+	OldPositions.SetNum(FlockSize);
+
+	pPartitionedSpace = std::make_unique<CellSpace>(pWorld, 5000, 5000, 10, 10, FlockSize);
+
 
 	const float spawnArea{ 800 };
 
@@ -55,6 +59,7 @@ Flock::Flock(
 			{
 				agent->SetSteeringBehavior(pPrioritySteering.get());
 				Agents.Add(std::move(agent));
+				pPartitionedSpace->AddAgent(*Agents.Last());
 			}
 			if (tries > 10)
 			{
@@ -79,11 +84,35 @@ void Flock::Tick(float DeltaTime)
   // TODO: register the neighbors for this agent (-> fill the memory pool with the neighbors for the currently evaluated agent)
   // TODO: update the agent (-> the steeringbehaviors use the neighbors in the memory pool)
   // TODO: trim the agent to the world
-
+	int idx{};
 	for (ASteeringAgent* boid : Agents)
 	{
-		RegisterNeighbors(boid);
+		if (!useSpatialPartitioning) { RegisterNeighbors(boid); }
+		else
+		{
+			OldPositions[idx] = boid->GetPosition();
+			pPartitionedSpace->UpdateAgentCell(*boid, OldPositions[idx]);
+			pPartitionedSpace->RegisterNeighbors(*boid, NeighborhoodRadius);
+			const TArray<ASteeringAgent*>& cellNeighbors = pPartitionedSpace->GetNeighbors();
+
+			Neighbors.Reset();
+			for (ASteeringAgent* neighbor : cellNeighbors)
+			{
+				if (FVector2D::Distance(neighbor->GetPosition(), boid->GetPosition()) < NeighborhoodRadius)
+				{
+					if (Neighbors.Num() < NrOfNeighbors - 1)
+					{
+						Neighbors.Add(neighbor);
+					}
+				}
+			}
+			
+
+		};
+		
 		boid->Tick(DeltaTime);
+
+		idx++;
 	}
 }
  
@@ -92,6 +121,11 @@ void Flock::RenderDebug()
 {
  // TODO: Render all the agents in the flock
 	RenderNeighborhood();
+	if (DebugRenderPartitions)
+	{
+		pPartitionedSpace->RenderCells();
+	}
+	
 }
 
 void Flock::ImGuiRender(ImVec2 const& WindowPos, ImVec2 const& WindowSize)
@@ -158,6 +192,13 @@ void Flock::ImGuiRender(ImVec2 const& WindowPos, ImVec2 const& WindowSize)
 		if (ImGui::Checkbox("Debug Rendering partitioning", &isChecked3))
 		{
 			DebugRenderPartitions = isChecked3;
+		}
+		ImGui::Spacing();
+
+		bool isChecked4 = useSpatialPartitioning;
+		if (ImGui::Checkbox("use spatial partitioning", &isChecked4))
+		{
+			useSpatialPartitioning = isChecked4;
 		}
 		ImGui::Spacing();
 		
@@ -247,6 +288,7 @@ void Flock::RegisterNeighbors(ASteeringAgent* const pAgent)
 			}
 		}
 	}
+	//NrOfNeighbors = Neighbors.Num();
 }
 #endif
 

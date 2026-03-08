@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 // Toggle this define to enable/disable spatial partitioning
-#define GAMEAI_USE_SPACE_PARTITIONING
+//#define GAMEAI_USE_SPACE_PARTITIONING
 
 #include "FlockingSteeringBehaviors.h"
 #include "Movement/SteeringBehaviors/SteeringAgent.h"
@@ -9,6 +9,8 @@
 #include "Movement/SteeringBehaviors/CombinedSteering/CombinedSteeringBehaviors.h"
 #include <memory>
 #include "imgui.h"
+
+#include "../SpacePartitioning/SpacePartitioning.h"
 #ifdef GAMEAI_USE_SPACE_PARTITIONING
 #include "../SpacePartitioning/SpacePartitioning.h"
 #endif
@@ -35,8 +37,24 @@ public:
 	int GetNrOfNeighbors() const { return pPartitionedSpace->GetNrOfNeighbors(); }
 #else // No space partitioning
 	void RegisterNeighbors(ASteeringAgent* const Agent);
-	int GetNrOfNeighbors() const { return NrOfNeighbors; }
-	const TArray<ASteeringAgent*>& GetNeighbors() const { return Neighbors; }
+
+	int GetNrOfNeighbors() const
+	{
+		if (useSpatialPartitioning)
+		{
+			return pPartitionedSpace->GetNrOfNeighbors();
+		}
+		return NrOfNeighbors;
+	}
+	const TArray<ASteeringAgent*>& GetNeighbors() const
+	{ 
+		if (useSpatialPartitioning)
+		{
+			return pPartitionedSpace->GetNeighbors();
+		}
+		return Neighbors;
+	}
+
 	float GetNeighborhoodRadius() { return NeighborhoodRadius; }
 
 #endif // USE_SPACE_PARTITIONING
@@ -52,6 +70,12 @@ private:
 	
 	int FlockSize{50};
 	TArray<ASteeringAgent*> Agents{};
+
+	bool useSpatialPartitioning{false};
+	std::unique_ptr<CellSpace> pPartitionedSpace{};
+	int NrOfCellsX{ 10 };
+	TArray<FVector2D> OldPositions{};
+
 #ifdef GAMEAI_USE_SPACE_PARTITIONING
 	std::unique_ptr<CellSpace> pPartitionedSpace{};
 	int NrOfCellsX{ 10 };
@@ -77,7 +101,7 @@ private:
 	std::unique_ptr<PrioritySteering> pPrioritySteering{};
 
 	// UI and rendering
-	bool DebugRenderSteering{false};
+	bool DebugRenderSteering{true};
 	bool DebugRenderNeighborhood{true};
 	bool DebugRenderPartitions{true};
 
