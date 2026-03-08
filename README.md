@@ -1,3 +1,3 @@
 # Game AI Project
 
-Feel free to edit the readme to your liking
+this project is a learning experience in programming AI behaviours. test things out, make mistakes, and learn from them (hopefully).
