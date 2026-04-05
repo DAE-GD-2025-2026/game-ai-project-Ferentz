@@ -29,6 +29,8 @@ protected:
 
 class Seek :public ISteeringBehavior
 {
+private:
+	float OGSpeed{ -1.f };
 public:
 	Seek() = default;
 	virtual ~Seek() = default;
@@ -59,10 +61,11 @@ public:
 	float GetSlowRadius() const { return SlowRadius; }
 	float GetTargetRadius() const { return TargetRadius; }
 	float GetSpeedMapper() const { return SpeedMapper; }
+	void SetTargetRadius(float radius) { TargetRadius = radius; }
 
 private:
-	ASteeringAgent* LastAgent;
-	float OGSpeed{};
+	//ASteeringAgent* LastAgent;
+	float OGSpeed{-1.f};
 	float SlowRadius{500.f};
 	float TargetRadius{150.f};
 	float SpeedMapper;

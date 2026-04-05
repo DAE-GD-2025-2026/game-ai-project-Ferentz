@@ -11,6 +11,17 @@
 
 SteeringOutput Seek::CalculateSteering(float DeltaTime, ASteeringAgent& Agent)
 {
+
+	if (OGSpeed < 0.f)
+	{
+		OGSpeed = Agent.GetMaxLinearSpeed();
+		//LastAgent = &Agent;
+	}
+	if (Agent.GetMaxLinearSpeed() != OGSpeed)
+	{
+		Agent.SetMaxLinearSpeed(OGSpeed);
+	}
+
 	SteeringOutput Steering{};
 	Steering.LinearVelocity = Target.Position - Agent.GetPosition();
 	Steering.LinearVelocity.Normalize();
@@ -37,10 +48,10 @@ SteeringOutput Arrive::CalculateSteering(float DeltaTime, ASteeringAgent& Agent)
 	SteeringOutput Steering{};
 
 	double const dist{ FVector2D::Distance(Agent.GetPosition(), Target.Position) };
-	if (Agent.GetMaxLinearSpeed() > OGSpeed)
+	if (OGSpeed < 0.f)
 	{
 		OGSpeed = Agent.GetMaxLinearSpeed();
-		LastAgent = &Agent;
+		//LastAgent = &Agent;
 	}
 	
 	if (dist < GetSlowRadius())
@@ -63,7 +74,14 @@ SteeringOutput Arrive::CalculateSteering(float DeltaTime, ASteeringAgent& Agent)
 
 Arrive::~Arrive()
 {
-	LastAgent->SetMaxLinearSpeed(OGSpeed);
+	/*try
+	{
+		LastAgent->SetMaxLinearSpeed(OGSpeed);
+	}
+	catch (...)
+	{
+
+	}*/
 }
 
 SteeringOutput Face::CalculateSteering(float DeltaTime, ASteeringAgent& Agent)
