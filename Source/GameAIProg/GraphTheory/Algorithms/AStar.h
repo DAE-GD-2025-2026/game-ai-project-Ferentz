@@ -18,7 +18,7 @@ namespace GameAI
 			Connection* pConnection = nullptr;
 			float costSoFar = 0.f; // accumulated g-costs of all the connections leading up to this one
 			float estimatedTotalCost = 0.f; // f-cost (= costSoFar + h-cost)
-
+			float ownHeuristic = 0.f;
 			bool operator==(const NodeRecord& other) const
 			{
 				return pNode == other.pNode

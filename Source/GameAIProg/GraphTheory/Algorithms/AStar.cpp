@@ -36,12 +36,16 @@ std::vector<Node*>AStar::FindPath(Node* const pStartNode, Node* const pGoalNode)
 	std::vector<NodeRecord> closedList{};
 
 	NodeRecord currentNodeRecord{};
+	NodeRecord closestNode{};
 	NodeRecord startRecord{ };
 	startRecord.pNode = pStartNode;
 	startRecord.pConnection = nullptr;
 	startRecord.costSoFar = 0;
 	startRecord.estimatedTotalCost = GetHeuristicCost(pStartNode, pGoalNode);
+	startRecord.ownHeuristic = GetHeuristicCost(pStartNode, pGoalNode);
 	openList.push_back(startRecord);
+
+	closestNode = startRecord;
 
 	while (!openList.empty())
 	{
@@ -50,6 +54,12 @@ std::vector<Node*>AStar::FindPath(Node* const pStartNode, Node* const pGoalNode)
 		if (currentNodeRecord.pNode == pGoalNode) break;
 		else
 		{
+
+			if (currentNodeRecord.ownHeuristic < closestNode.ownHeuristic )
+			{
+				closestNode = currentNodeRecord;
+			}
+
 			std::vector<Connection*> connections 
 				= pGraph->FindConnectionsFrom(currentNodeRecord.pNode->GetId());
 			// C
@@ -67,7 +77,7 @@ std::vector<Node*>AStar::FindPath(Node* const pStartNode, Node* const pGoalNode)
 				newNodeRecord.pConnection = connection;
 				newNodeRecord.pNode = pNextNode;
 				newNodeRecord.estimatedTotalCost = gCostSF + GetHeuristicCost(pNextNode, pGoalNode);
-				
+				newNodeRecord.ownHeuristic = GetHeuristicCost(pNextNode, pGoalNode);
 				openList.push_back(newNodeRecord);
 			}
 
@@ -77,7 +87,10 @@ std::vector<Node*>AStar::FindPath(Node* const pStartNode, Node* const pGoalNode)
 		}
 	}
 
-	if (currentNodeRecord.pNode != pGoalNode) return path;
+	if (currentNodeRecord.pNode != pGoalNode)
+	{
+		currentNodeRecord = closestNode;
+	}
 
 	while (currentNodeRecord.pNode != pStartNode)
 	{
